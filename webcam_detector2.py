@@ -126,10 +126,11 @@ class FaceMeshDetector():
                     eyes=1
                 else:
                     eyes=0
-                cv2.putText(img, f'Eyes Open: {int(eyes)}', (20, 310), cv2.FONT_HERSHEY_PLAIN,
+                cv2.putText(img, f'Eyes Open: {int(eyes)}', (20, 280), cv2.FONT_HERSHEY_PLAIN,
                              1, (0, 0, 0), 2)
                     
                 # Eyebrows
+                
 
         return img
 
