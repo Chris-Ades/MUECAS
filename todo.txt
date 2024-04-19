@@ -1,0 +1,9 @@
+Implement XY rotation clockwise and counterclockwise
+Stop Landmarks from vibrating
+Make paramters move slow like there is some resistance to how fast they move
+
+
+Send Parameter values as OSC messages
+
+Implement Recording
+Implement Sending OSC mesages
