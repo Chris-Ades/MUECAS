@@ -1,3 +1,5 @@
+Implement Custom Pyo Sound Maker
+
 Implement XY rotation clockwise and counterclockwise
 Stop Landmarks from vibrating
 Make paramters move slow like there is some resistance to how fast they move

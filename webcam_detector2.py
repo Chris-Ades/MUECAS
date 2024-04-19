@@ -29,7 +29,7 @@ class FaceMeshDetector():
                                                 self.drawSpec, self.drawSpec)
 
                 for id, lm in enumerate(faceLms.landmark):
-                    if id in [159, 145, 374, 386]:
+                    if id in [66, 69, 299, 296, 55, 285, 133, 362]:
                         ih, iw, ic = img.shape
                         x, y = int(lm.x*iw), int(lm.y*ih)
                         cv2.putText(img, str(id), (x, y), cv2.FONT_HERSHEY_PLAIN,
@@ -40,10 +40,6 @@ class FaceMeshDetector():
                 for lms in faceLms.landmark:
                     lmList.append((lms.x*iw, lms.y*ih))
 
-                # North South East West Tilts
-                # x_nose_tip, y_nose_tip = lmList[1]
-                # x_right_eye_inner, y_right_eye_inner = lmList[133]
-                # x_left_eye_inner, y_left_eye_inner = lmList[362]
 
                 # XY Rotation
 
@@ -58,14 +54,13 @@ class FaceMeshDetector():
                             1, (0, 0, 0), 2)
                 
                 x, y = lmList[1]
+
                 # X direction
                 # # X Range is [150, 500] at distance_Z = 100 with minmax [20, 90]
                 # # X Range is [40, 600] at distance_Z = 0  with minmax [20, 90]
-
                 current_x_max = np.interp(distance_Z, [0, 100], [600, 500])
                 current_x_min = np.interp(distance_Z, [0, 100], [40, 150])
                 x = np.interp(x, [current_x_min, current_x_max], [0, 100])
-                # x = np.interp(distance, [current_x_min, current_x_max], [0, 100])
                 cv2.putText(img, f'X: {x:.2f}', (20, 130), cv2.FONT_HERSHEY_PLAIN,
                             1, (0, 0, 0), 2)
 
@@ -101,7 +96,7 @@ class FaceMeshDetector():
                 cv2.putText(img, f'Mouth Horizontal: {mouth_horiz:.2f}', (20, 250), cv2.FONT_HERSHEY_PLAIN,
                              1, (0, 0, 0), 2)
 
-                # Right Eye Blinks
+                # Right Eye
                 x145, y145 = lmList[145]
                 x159, y159 = lmList[159]
                 distance = math.hypot(x145 - x159, y145 - y159)
@@ -110,27 +105,37 @@ class FaceMeshDetector():
                 current_right_eye_max = np.interp(distance_Z, [0, 100], [5, 28])
                 current_right_eye_min = np.interp(distance_Z, [0, 100], [3, 10])
                 right_eye = np.interp(distance, [current_right_eye_min, current_right_eye_max], [0, 100])
- 
                 # Left Eye
                 x374, y374 = lmList[374]
                 x386, y386 = lmList[386]
                 distance = math.hypot(x374 - x386, y374 - y386)
-                # left Eye Range is [10, 28] at distance_Z = 100 with minmax [20, 90]
-                # left Eye Range is [3, 5] at distance_Z = 0  with minmax [20, 90]
+                # Left Eye Range is [10, 28] at distance_Z = 100 with minmax [20, 90]
+                # Left Eye Range is [3, 5] at distance_Z = 0  with minmax [20, 90]
                 current_left_eye_max = np.interp(distance_Z, [0, 100], [5, 28])
                 current_left_eye_min = np.interp(distance_Z, [0, 100], [3, 10])
                 left_eye = np.interp(distance, [current_left_eye_min, current_left_eye_max], [0, 100])
-
                 eyes = left_eye + right_eye
                 if eyes > 100:
                     eyes=1
                 else:
                     eyes=0
-                cv2.putText(img, f'Eyes Open: {int(eyes)}', (20, 280), cv2.FONT_HERSHEY_PLAIN,
+                cv2.putText(img, f'Eyes Open?: {int(eyes)}', (20, 280), cv2.FONT_HERSHEY_PLAIN,
                              1, (0, 0, 0), 2)
                     
                 # Eyebrows
-                
+                x66, y66 = lmList[66]
+                x69, y69 = lmList[69]
+                distance = math.hypot(x66 - x69, y66 - y69)
+                x296, y296 = lmList[296]
+                x299, y299 = lmList[299]
+                distance = distance + math.hypot(x296 - x299, y296 - y299)
+                # Left Eye Range is [65, 25] at distance_Z = 100 with minmax [20, 90]
+                # Left Eye Range is [15, 11] at distance_Z = 0  with minmax [20, 90]
+                current_eyebrows_max = np.interp(distance_Z, [0, 100], [11, 25])
+                current_eyebrows_min = np.interp(distance_Z, [0, 100], [15, 65])
+                eyebrows = np.interp(distance, [current_eyebrows_max, current_eyebrows_min], [100, 0])
+                cv2.putText(img, f'Eyebrows: {eyebrows:.2f}', (20, 310), cv2.FONT_HERSHEY_PLAIN,
+                             1, (0, 0, 0), 2)
 
         return img
 
