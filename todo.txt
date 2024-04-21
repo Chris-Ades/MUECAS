@@ -1,11 +1,10 @@
-Implement Custom Pyo Sound Maker
 
 Implement XY rotation clockwise and counterclockwise
+
+Implement microphone recording to sample and send file to osc_receiver
+osc_receiver updates file
+
+Implement GUI that allows users to change OSC address, port, and host for each parameter in webcam_detector
 Stop Landmarks from vibrating
-Make paramters move slow like there is some resistance to how fast they move
 
-
-Send Parameter values as OSC messages
-
-Implement Recording
-Implement Sending OSC mesages
+Create an audio+webcam server that sends out all webcam feeds
