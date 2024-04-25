@@ -66,7 +66,7 @@ class FaceMeshDetector():
                 # # X Range is [40, 600] at self.z = 0  with minmax [20, 90]
                 current_x_max = np.interp(self.z, [0, 100], [600, 500])
                 current_x_min = np.interp(self.z, [0, 100], [40, 150])
-                self.x = np.interp(x, [current_x_min, current_x_max], [100, 0])
+                self.x = np.interp(x, [current_x_min, current_x_max], [0, 100])
                 cv2.putText(img, f'X: {self.x:.2f}', (20, 130), cv2.FONT_HERSHEY_PLAIN,
                             1, (0, 0, 0), 2)
 
@@ -121,10 +121,10 @@ class FaceMeshDetector():
                 current_left_eye_min = np.interp(self.z, [0, 100], [3, 10])
                 left_eye = np.interp(distance, [current_left_eye_min, current_left_eye_max], [0, 100])
                 eyes = left_eye + right_eye
-                if eyes > 70:
-                    self.blink=0
-                else:
+                if eyes < 100:
                     self.blink=1
+                else:
+                    self.blink=0
                 cv2.putText(img, f'Blink: {int(self.blink)}', (20, 280), cv2.FONT_HERSHEY_PLAIN,
                              1, (0, 0, 0), 2)
 
@@ -148,43 +148,67 @@ class FaceMeshDetector():
         return img 
 
 def main():
+    def pixelate(image, pixel_size):
+        height, width = image.shape[:2]
+        small_image = cv2.resize(image, (pixel_size, pixel_size), interpolation=cv2.INTER_NEAREST)
+
+        if pixel_size < 23:
+            num_recolor = pixel_size*pixel_size // 6
+            random_rows = np.random.randint(0, height, num_recolor)
+            random_cols = np.random.randint(0, width, num_recolor)
+            random_colors = [image[row, col] for row, col in zip(random_rows, random_cols)]
+            
+            # Recolor the selected pixels
+            for i in range(num_recolor):
+                row = random_rows[i] % pixel_size  # Ensure row index is within bounds
+                col = random_cols[i] % pixel_size  # Ensure column index is within bounds
+                small_image[row, col] = random_colors[i]
+
+        pixelated_image = cv2.resize(small_image, (width, height), interpolation=cv2.INTER_NEAREST)
+
+
+        return pixelated_image
+
     # Video
     cap = cv2.VideoCapture(0)
     detector = FaceMeshDetector()
 
     # Sound
     pyo_server = Server().boot().start()
+    sender = OscDataSend(types="iffffff", port=9900, address="/face_data", host="192.168.9.223")
+    
+    blink = 0
+    x = 0
+    y = 0
+    z = 0
+    mouth_horiz = 0
+    mouth_vert = 0
+    eyebrows = 0
 
-    volume = Sig(0.1)
-    frequency = Sig(110)
-    cutoff = Sig(4000)
-    tremolo = Sig(1)
-    detune = Sig(0.5)
-    q = Sig(1)
-    send = OscSend(
-        input=[volume, frequency, cutoff, tremolo, detune, q],
-        port=9000,
-        address=["/volume", "/frequency", "/cutoff", "/tremolo", "/detune", "/q"],
-        host="192.168.9.223",
-    )
+    def send():
+        sender.send([blink, x, y, z, mouth_horiz, mouth_vert, eyebrows])
+
+    pat = Pattern(send, time=0.001).play()
 
     while True:
         success, img = cap.read()
-        img = detector.findFaceMesh(img)
+        img = cv2.flip(img, 1)
+        img = detector.findFaceMesh(img, show_landmarks=False)
+        
+        
+        blink = detector.blink
+        x = detector.x
+        y = detector.y
+        z = detector.z
+        mouth_horiz = detector.mouth_horiz
+        mouth_vert = detector.mouth_vert
+        eyebrows = detector.eyebrows
 
-        if detector.blink:
+        if blink:
             img = 255 - img
-            pyo_server.stop()
 
-        else:
-            pyo_server.start()
-
-            volume.setValue((detector.z / 100).item())
-            frequency.setValue((np.interp(detector.eyebrows, [0, 100], [110, 1100])).item())
-            cutoff.setValue((np.interp(detector.x, [0, 100], [10, 8000])).item())
-            tremolo.setValue((np.interp(detector.y, [0, 100], [0, 25])).item())
-            detune.setValue((np.interp(detector.mouth_horiz, [0, 100], [0, 1])).item())
-            q.setValue((np.interp(detector.mouth_vert, [0, 100], [15, 1])).item())
+        if y <= 50:
+            img = pixelate(img, pixel_size=int((np.interp(y, [0, 50], [20, 1000])).item()))
 
         cv2.imshow("Muecas", img)
 
