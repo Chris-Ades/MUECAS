@@ -1,2 +1,2 @@
 # muecas
-A synthesizer for your face
+A synthesizer controlled by your face
